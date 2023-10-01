@@ -1,3 +1,5 @@
+//Criando um molde para os contatos (backend)
+
 // ignore_for_file: prefer_const_declarations
 
 //1.2 instalei e importe o sqflite
