@@ -2,62 +2,58 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
+//2.3 vou atribuir uma variável aqui o nome da minha tabela para então facilitar
+//pois irei utilizar em vários locais ou várias vezes esse nome
+final String contatoTabelaNome = "contatoTabela";
 final String idColuna = "idColuna";
 final String nomeColuna = "nomeColuna";
 final String telefoneColuna = "telefoneColuna";
 final String emailColuna = "emailColuna";
 final String imagemColuna = "imagemColuna";
 
-//1.1 Essa classe vai conter apenas um objeto em todo nosso código. Ela não vai
-//poder ter várias instâncias ao longo do código. Por isso então vamos utilizar
-//um padrão chamado Singleton. É um padrão interessante quando queremos ter
-//apenas um objeto de nossa classe
 class ContatoHelper {
-  //1.2 primeiro declaramos "static". Ele indica que essa será uma variável que
-  //terá apenas uma em toda a minha classe (é uma variável da minha classe, e
-  //não do meu objeto)
-  //
-  //static final "Obejeto_da_classe_dentro_da_própria_classe" _instance<<muito
-  //utilizando esse nome = ContatoHelper.chamar_construtor_interno
-  //
-  //Resumindo: abaixo estou criando um objeto da minha própria classe chamado
-  //_instancia. Só terei essa única instancia do ContatoHelper. cm é um construtor
-  //interno ele só poderá ser chamado de dentro da própria classe
   static final ContatoHelper _instancia = ContatoHelper.interno();
 
-  //1.4 será explicado melhor depois
   factory ContatoHelper() => _instancia;
 
-  //1.3 Chamo ele aqui, e instancio ele no passo acima
   ContatoHelper.interno();
 
-  //1.5 abaixo de claro o meu banco de dados..
-  //coloco underlineBanco porque eu não quero ser capaz de chamar ele de fora da
-  //minha classe
   Database? _banco;
 
-  //1.6 agora vamos inicializar o banco de dados
-  get banco {
-    //verificamos se o banco já não estar inicializado
+  //2.9 e especifico aqui esse retorno futuro
+  Future<Database?> get banco async {
     if (_banco != null) {
       return _banco;
-      //se não estiver, iniciamos ele
     } else {
-      _banco = iniciarBanco();
+      //2.7 como vamos ter que esperar, deve ser utilizado aqui um await
+      _banco = await iniciarBanco();
+      //2.8 coloco então que essa função retorna o meu banco de dados
+      return _banco;
     }
+  }
 
-    //1.7 função para inicializar o banco
-    iniciarBanco() async {
-      //1.8 primeiro, vamos pegar o local onde o banco é armazenado
-      //await pq o caminho não retornará de imediato. e async acima pq aq tem um
-      //await. o getDatabasesPath() é uma função do sqflite
-      final bancoPath = await getDatabasesPath();
-      //1.9 peguei o caminho acima, e agr irei pegar o arquivo de banco de fato
-      //o join é do pacote "path" que foi importato
-      //então o caminho do meu banco dados + o nome do arquivo retorna então
-      //o arquivo/banco em si
-      final path = join(bancoPath, "contatos.db");
-    }
+  //2.6 como os valores abaixo são retornardos instantaneamente, colocarei
+  //que essa minha função abaixo irá retornar um valor futuro
+  Future<Database> iniciarBanco() async {
+    final bancoPath = await getDatabasesPath();
+    final caminho = join(bancoPath, "contatos.db");
+
+    //2.1 agora vamos abrir o banco de dados
+    return await openDatabase(caminho, version: 1,
+        onCreate: (Database banco, int versaoMaisNova) async {
+      //2.2 agora vamos executar o banco de dados. O código que estar dentro
+      //do execute abaixo é um código de SQL
+      //O que vamos fazer é pedir para o BD criar uma tabela que contenha as
+      //colunas com os stributos do meu contato
+
+      //2.4 os comandos vamos colocar em letras maísculas, comando em letras
+      //mínúsculas
+      await banco.execute(
+          'CREATE TABLE $contatoTabelaNome($idColuna INTEGER PRIMARY KEY, $nomeColuna TEXT, $telefoneColuna TEXT, $emailColuna TEXT, $imagemColuna TEXT)');
+      //2.5 com isso então já vamos ter aberto o banco de dados. No caso qnd
+      //formos abrir pela primeira fez, ele já vai rodar o onCreate e criar
+      //a nossa tabela
+    });
   }
 }
 
